@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tienes una carta 💌</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&family=Lora:ital,wght@0,400;0,500;1,400&family=Dancing+Script:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --rose: #f9c6d0;
+    --rose-light: #fde8ee;
+    --rose-soft: #fdf0f4;
+    --rose-deep: #f4a0b5;
+    --rose-blush: #fce4ec;
+    --fuchsia: #e8739a;
+    --white: #fffbfd;
+    --text-deep: #7a3050;
+    --text-mid: #c06080;
+    --text-soft: #e090aa;
+  }
+
+  body {
+    font-family: 'Lora', Georgia, serif;
+    background: var(--rose-soft);
+    color: var(--text-deep);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── PARTICLES ── */
+  #particles-canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── WELCOME SCREEN ── */
+  #welcome {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    background: linear-gradient(135deg, #fce4ec 0%, #fde8ee 40%, #fce4f8 100%);
+    transition: opacity 0.9s ease, filter 0.9s ease;
+  }
+
+  #welcome.fade-out {
+    opacity: 0;
+    filter: blur(8px);
+    pointer-events: none;
+  }
+
+  .welcome-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.8rem;
+    animation: floatIn 1.2s cubic-bezier(.34,1.56,.64,1) forwards;
+  }
+
+  @keyframes floatIn {
+    from { opacity: 0; transform: translateY(30px) scale(0.95); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* Hello Kitty face SVG */
+  .hk-welcome {
+    width: 120px;
+    filter: drop-shadow(0 8px 24px rgba(244,160,181,0.5));
+    animation: floatKitty 3s ease-in-out infinite;
+  }
+
+  @keyframes floatKitty {
+    0%, 100% { transform: translateY(0); }
+    50%       { transform: translateY(-10px); }
+  }
+
+  .welcome-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.6rem, 5vw, 2.4rem);
+    color: var(--text-deep);
+    text-align: center;
+    letter-spacing: 0.02em;
+  }
+
+  .welcome-sub {
+    font-family: 'Dancing Script', cursive;
+    font-size: clamp(1.2rem, 4vw, 1.6rem);
+    color: var(--fuchsia);
+    text-align: center;
+    letter-spacing: 0.04em;
+  }
+
+  .btn-open {
+    padding: 0.85rem 3rem;
+    background: linear-gradient(135deg, var(--rose-deep), var(--fuchsia));
+    color: white;
+    border: none;
+    border-radius: 50px;
+    font-family: 'Lora', serif;
+    font-size: 1.05rem;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    box-shadow: 0 6px 24px rgba(232,115,154,0.35);
+    transition: transform 0.3s ease, box-shadow 0.3s ease, filter 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-open::after {
+    content: '';
+    position: absolute;
+    top: -50%; left: -60%;
+    width: 40%; height: 200%;
+    background: rgba(255,255,255,0.3);
+    transform: skewX(-20deg);
+    animation: shimmer 2.5s infinite;
+  }
+
+  @keyframes shimmer {
+    0%   { left: -60%; }
+    100% { left: 130%; }
+  }
+
+  .btn-open:hover {
+    transform: translateY(-3px) scale(1.03);
+    box-shadow: 0 10px 32px rgba(232,115,154,0.5);
+  }
+
+  /* decorative bows on welcome */
+  .bow-deco {
+    position: absolute;
+    opacity: 0.18;
+    pointer-events: none;
+  }
+
+  /* ── MAIN PAGE ── */
+  #main-page {
+    display: none;
+    min-height: 100vh;
+    position: relative;
+    z-index: 1;
+  }
+
+  #main-page.visible {
+    display: flex;
+    animation: fadeIn 1s ease forwards;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  /* ── LAYOUT ── */
+  .layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    min-height: 100vh;
+    width: 100%;
+    gap: 0;
+  }
+
+  /* ── LEFT PANEL ── */
+  .left-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding: 2rem 1.2rem;
+    background: rgba(253,232,238,0.6);
+    border-right: 1px solid rgba(244,160,181,0.25);
+    backdrop-filter: blur(6px);
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    align-items: center;
+  }
+
+  /* small kitty top of left panel */
+  .hk-small {
+    width: 64px;
+    filter: drop-shadow(0 4px 12px rgba(244,160,181,0.4));
+    animation: floatKitty 3.5s ease-in-out infinite;
+    margin-top: 0.5rem;
+  }
+
+  /* typing box */
+  .typing-box {
+    width: 100%;
+    background: rgba(255,240,244,0.75);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    border: 1px solid rgba(244,160,181,0.3);
+    padding: 1.2rem 1.4rem;
+    box-shadow: 0 4px 20px rgba(244,160,181,0.15);
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  .typing-box::before {
+    content: '🎀';
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 1.3rem;
+  }
+
+  #typing-text {
+    font-family: 'Dancing Script', cursive;
+    font-size: 1.15rem;
+    color: var(--fuchsia);
+    text-align: center;
+    min-height: 1.5em;
+  }
+
+  .cursor-blink {
+    display: inline-block;
+    width: 2px;
+    height: 1.1em;
+    background: var(--fuchsia);
+    margin-left: 2px;
+    vertical-align: middle;
+    animation: blink 1s step-end infinite;
+    border-radius: 2px;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0; }
+  }
+
+  /* counters */
+  .counter-card {
+    width: 100%;
+    background: rgba(255,245,250,0.8);
+    backdrop-filter: blur(10px);
+    border-radius: 18px;
+    border: 1px solid rgba(244,160,181,0.25);
+    padding: 1.1rem 1rem;
+    box-shadow: 0 4px 16px rgba(244,160,181,0.12);
+    text-align: center;
+  }
+
+  .counter-label {
+    font-family: 'Dancing Script', cursive;
+    font-size: 0.9rem;
+    color: var(--text-mid);
+    line-height: 1.4;
+    margin-bottom: 0.4rem;
+  }
+
+  .counter-date {
+    font-size: 0.72rem;
+    color: var(--text-soft);
+    font-style: italic;
+    margin-bottom: 0.7rem;
+    display: block;
+  }
+
+  .counter-display {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+  }
+
+  .counter-unit {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: rgba(252,228,236,0.7);
+    border-radius: 10px;
+    padding: 0.4rem 0.2rem;
+  }
+
+  .counter-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.15rem;
+    font-weight: 500;
+    color: var(--text-deep);
+    line-height: 1;
+  }
+
+  .counter-uname {
+    font-size: 0.58rem;
+    color: var(--text-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 2px;
+  }
+
+  /* hearts deco left */
+  .hearts-deco {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    opacity: 0.5;
+  }
+
+  .hearts-deco span {
+    font-size: 0.8rem;
+    animation: heartPulse 2s ease-in-out infinite;
+  }
+
+  .hearts-deco span:nth-child(2) { animation-delay: 0.4s; }
+  .hearts-deco span:nth-child(3) { animation-delay: 0.8s; }
+
+  @keyframes heartPulse {
+    0%, 100% { transform: scale(1); }
+    50%       { transform: scale(1.25); }
+  }
+
+  /* ── RIGHT PANEL — LETTER ── */
+  .right-panel {
+    padding: 2.5rem 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-y: auto;
+  }
+
+  .letter-container {
+    max-width: 680px;
+    width: 100%;
+    background: rgba(255,251,253,0.92);
+    border-radius: 28px;
+    box-shadow: 0 8px 48px rgba(244,160,181,0.18), 0 2px 8px rgba(244,160,181,0.1);
+    overflow: hidden;
+    animation: letterRise 1.2s cubic-bezier(.34,1.56,.64,1) 0.2s both;
+    border: 1px solid rgba(244,160,181,0.2);
+  }
+
+  @keyframes letterRise {
+    from { opacity: 0; transform: translateY(40px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .letter-header {
+    background: linear-gradient(135deg, var(--rose-blush) 0%, var(--rose-light) 100%);
+    padding: 2rem 2.5rem 1.5rem;
+    text-align: center;
+    border-bottom: 1px solid rgba(244,160,181,0.2);
+    position: relative;
+  }
+
+  .letter-header-bows {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+
+  .letter-header-bows span { font-size: 1.4rem; opacity: 0.6; }
+
+  .hk-header {
+    width: 70px;
+  }
+
+  .letter-title {
+    font-family: 'Dancing Script', cursive;
+    font-size: 1.9rem;
+    color: var(--text-deep);
+    letter-spacing: 0.02em;
+  }
+
+  .letter-subtitle {
+    font-family: 'Lora', serif;
+    font-size: 0.85rem;
+    color: var(--text-soft);
+    font-style: italic;
+    margin-top: 0.3rem;
+  }
+
+  /* paper texture */
+  .letter-body {
+    padding: 2.5rem 2.8rem 3rem;
+    position: relative;
+    background-image:
+      repeating-linear-gradient(
+        transparent,
+        transparent 27px,
+        rgba(244,160,181,0.07) 27px,
+        rgba(244,160,181,0.07) 28px
+      );
+  }
+
+  /* decorative margin line */
+  .letter-body::before {
+    content: '';
+    position: absolute;
+    left: 2.2rem;
+    top: 0; bottom: 0;
+    width: 1px;
+    background: rgba(244,160,181,0.18);
+  }
+
+  .letter-text {
+    font-family: 'Lora', serif;
+    font-size: 1.02rem;
+    line-height: 1.95;
+    color: #5c2d44;
+    padding-left: 1rem;
+  }
+
+  .letter-text p {
+    margin-bottom: 1.4rem;
+  }
+
+  .letter-text p:last-child {
+    margin-bottom: 0;
+  }
+
+  .letter-sign {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px dashed rgba(244,160,181,0.3);
+    text-align: right;
+    padding-right: 1rem;
+  }
+
+  .letter-sign-name {
+    font-family: 'Dancing Script', cursive;
+    font-size: 1.5rem;
+    color: var(--fuchsia);
+  }
+
+  .letter-sign-hearts {
+    font-size: 1rem;
+    margin-top: 0.3rem;
+    opacity: 0.7;
+  }
+
+  /* decorative corners */
+  .letter-corner {
+    position: absolute;
+    font-size: 1.1rem;
+    opacity: 0.35;
+    pointer-events: none;
+  }
+
+  .letter-corner.tl { top: 14px; left: 18px; }
+  .letter-corner.tr { top: 14px; right: 18px; }
+  .letter-corner.bl { bottom: 14px; left: 18px; }
+  .letter-corner.br { bottom: 14px; right: 18px; }
+
+  .letter-footer {
+    padding: 1rem 2rem 1.5rem;
+    text-align: center;
+    border-top: 1px solid rgba(244,160,181,0.15);
+  }
+
+  .letter-footer-hearts {
+    font-size: 1rem;
+    opacity: 0.45;
+    letter-spacing: 0.3em;
+  }
+
+  /* ── FLOATING HEARTS BG ── */
+  .floating-heart {
+    position: fixed;
+    pointer-events: none;
+    z-index: 0;
+    animation: heartFloat linear infinite;
+    opacity: 0;
+  }
+
+  @keyframes heartFloat {
+    0%   { opacity: 0;    transform: translateY(0) rotate(0deg) scale(0.8); }
+    10%  { opacity: 0.6; }
+    90%  { opacity: 0.3; }
+    100% { opacity: 0;    transform: translateY(-100vh) rotate(25deg) scale(1.2); }
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    .layout {
+      grid-template-columns: 1fr;
+    }
+
+    .left-panel {
+      position: relative;
+      height: auto;
+      flex-direction: row;
+      flex-wrap: wrap;
+      justify-content: center;
+      padding: 1.2rem;
+      gap: 1rem;
+      border-right: none;
+      border-bottom: 1px solid rgba(244,160,181,0.2);
+    }
+
+    .hk-small { display: none; }
+
+    .typing-box {
+      width: 100%;
+      min-height: 60px;
+    }
+
+    .counter-card {
+      width: calc(50% - 0.5rem);
+    }
+
+    .hearts-deco { display: none; }
+
+    .right-panel {
+      padding: 1.5rem 1rem;
+    }
+
+    .letter-body {
+      padding: 1.8rem 1.5rem 2.5rem;
+    }
+
+    .letter-body::before { left: 1rem; }
+    .letter-text { padding-left: 0.5rem; font-size: 0.97rem; }
+
+    .letter-header { padding: 1.5rem 1.5rem 1rem; }
+  }
+
+  @media (max-width: 420px) {
+    .counter-card { width: 100%; }
+    .letter-text { font-size: 0.93rem; line-height: 1.85; }
+    .letter-body { padding: 1.5rem 1.2rem 2rem; }
+  }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(232,115,154,0.25); border-radius: 10px; }
+</style>
+</head>
+<body>
+
+<!-- CANVAS for particles -->
+<canvas id="particles-canvas"></canvas>
+
+<!-- ── WELCOME SCREEN ── -->
+<div id="welcome">
+  <!-- decorative bows -->
+  <span class="bow-deco" style="top:8%;left:5%;font-size:3rem;">🎀</span>
+  <span class="bow-deco" style="top:15%;right:8%;font-size:2rem;">💗</span>
+  <span class="bow-deco" style="bottom:12%;left:10%;font-size:2.5rem;">⭐</span>
+  <span class="bow-deco" style="bottom:8%;right:6%;font-size:2rem;">🎀</span>
+  <span class="bow-deco" style="top:50%;left:3%;font-size:1.5rem;">💕</span>
+  <span class="bow-deco" style="top:45%;right:4%;font-size:1.5rem;">🌸</span>
+
+  <div class="welcome-inner">
+    <!-- Hello Kitty SVG -->
+    <svg class="hk-welcome" viewBox="0 0 200 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- body -->
+      <ellipse cx="100" cy="160" rx="55" ry="52" fill="#fff5f8" stroke="#f4a0b5" stroke-width="2"/>
+      <!-- head -->
+      <ellipse cx="100" cy="95" rx="65" ry="62" fill="white" stroke="#f4a0b5" stroke-width="2"/>
+      <!-- ears -->
+      <ellipse cx="52" cy="45" rx="20" ry="22" fill="white" stroke="#f4a0b5" stroke-width="2"/>
+      <ellipse cx="148" cy="45" rx="20" ry="22" fill="white" stroke="#f4a0b5" stroke-width="2"/>
+      <!-- bow on right ear area -->
+      <g transform="translate(130,20)">
+        <ellipse cx="-10" cy="0" rx="14" ry="9" fill="#f4a0b5" opacity="0.9"/>
+        <ellipse cx="10" cy="0" rx="14" ry="9" fill="#f4a0b5" opacity="0.9"/>
+        <ellipse cx="0" cy="0" rx="6" ry="6" fill="#e8739a"/>
+      </g>
+      <!-- eyes -->
+      <ellipse cx="78" cy="95" rx="6" ry="7" fill="#2d1a22"/>
+      <ellipse cx="122" cy="95" rx="6" ry="7" fill="#2d1a22"/>
+      <!-- eye shine -->
+      <circle cx="81" cy="92" r="2" fill="white"/>
+      <circle cx="125" cy="92" r="2" fill="white"/>
+      <!-- nose -->
+      <ellipse cx="100" cy="108" rx="5" ry="3.5" fill="#f4a0b5"/>
+      <!-- whiskers -->
+      <line x1="30" y1="100" x2="88" y2="106" stroke="#d0a0b0" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="30" y1="110" x2="88" y2="110" stroke="#d0a0b0" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="112" y1="106" x2="170" y2="100" stroke="#d0a0b0" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="112" y1="110" x2="170" y2="110" stroke="#d0a0b0" stroke-width="1.5" stroke-linecap="round"/>
+      <!-- heart on chest -->
+      <path d="M100 170 C100 170 85 158 85 148 C85 141 92 137 100 144 C108 137 115 141 115 148 C115 158 100 170 100 170Z" fill="#f4a0b5" opacity="0.8"/>
+      <!-- tiny stars -->
+      <text x="22" y="160" font-size="14" opacity="0.4" fill="#f4a0b5">✦</text>
+      <text x="168" y="155" font-size="12" opacity="0.4" fill="#f4a0b5">✦</text>
+    </svg>
+
+    <div style="text-align:center; display:flex; flex-direction:column; gap:0.6rem; align-items:center;">
+      <p class="welcome-title">Tienes una carta nueva 💌</p>
+      <p class="welcome-sub">para mi flaquita</p>
+    </div>
+
+    <button class="btn-open" onclick="openLetter()">abrir</button>
+  </div>
+</div>
+
+<!-- ── MAIN PAGE ── -->
+<div id="main-page">
+  <div class="layout">
+
+    <!-- LEFT -->
+    <aside class="left-panel">
+
+      <!-- small kitty -->
+      <svg class="hk-small" viewBox="0 0 200 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="100" cy="160" rx="55" ry="52" fill="#fff5f8" stroke="#f4a0b5" stroke-width="2.5"/>
+        <ellipse cx="100" cy="95" rx="65" ry="62" fill="white" stroke="#f4a0b5" stroke-width="2.5"/>
+        <ellipse cx="52" cy="45" rx="20" ry="22" fill="white" stroke="#f4a0b5" stroke-width="2.5"/>
+        <ellipse cx="148" cy="45" rx="20" ry="22" fill="white" stroke="#f4a0b5" stroke-width="2.5"/>
+        <g transform="translate(130,20)">
+          <ellipse cx="-10" cy="0" rx="14" ry="9" fill="#f4a0b5" opacity="0.9"/>
+          <ellipse cx="10" cy="0" rx="14" ry="9" fill="#f4a0b5" opacity="0.9"/>
+          <ellipse cx="0" cy="0" rx="6" ry="6" fill="#e8739a"/>
+        </g>
+        <ellipse cx="78" cy="95" rx="6" ry="7" fill="#2d1a22"/>
+        <ellipse cx="122" cy="95" rx="6" ry="7" fill="#2d1a22"/>
+        <circle cx="81" cy="92" r="2" fill="white"/>
+        <circle cx="125" cy="92" r="2" fill="white"/>
+        <ellipse cx="100" cy="108" rx="5" ry="3.5" fill="#f4a0b5"/>
+        <line x1="30" y1="100" x2="88" y2="106" stroke="#d0a0b0" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="30" y1="110" x2="88" y2="110" stroke="#d0a0b0" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="112" y1="106" x2="170" y2="100" stroke="#d0a0b0" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="112" y1="110" x2="170" y2="110" stroke="#d0a0b0" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M100 170 C100 170 85 158 85 148 C85 141 92 137 100 144 C108 137 115 141 115 148 C115 158 100 170 100 170Z" fill="#f4a0b5" opacity="0.8"/>
+      </svg>
+
+      <!-- typing box -->
+      <div class="typing-box">
+        <span id="typing-text"><span class="cursor-blink"></span></span>
+      </div>
+
+      <!-- hearts deco -->
+      <div class="hearts-deco">
+        <span>💗</span><span>🌸</span><span>💗</span>
+      </div>
+
+      <!-- counter 1 -->
+      <div class="counter-card">
+        <p class="counter-label">desde que comenzamos a hablar</p>
+        <span class="counter-date">14 de mayo de 2025</span>
+        <div class="counter-display" id="c1"></div>
+      </div>
+
+      <!-- counter 2 -->
+      <div class="counter-card">
+        <p class="counter-label">desde que formalizamos</p>
+        <span class="counter-date">5 de octubre de 2025</span>
+        <div class="counter-display" id="c2"></div>
+      </div>
+
+      <!-- small bow deco -->
+      <div style="text-align:center; opacity:0.35; font-size:0.9rem; letter-spacing:0.4em;">🎀 ✦ 🎀</div>
+
+    </aside>
+
+    <!-- RIGHT — LETTER -->
+    <main class="right-panel">
+      <div class="letter-container">
+
+        <div class="letter-header">
+          <div class="letter-header-bows">
+            <span>🎀</span>
+            <svg class="hk-header" viewBox="0 0 200 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <ellipse cx="100" cy="160" rx="55" ry="52" fill="#fff5f8" stroke="#f4a0b5" stroke-width="2.5"/>
+              <ellipse cx="100" cy="95" rx="65" ry="62" fill="white" stroke="#f4a0b5" stroke-width="2.5"/>
+              <ellipse cx="52" cy="45" rx="20" ry="22" fill="white" stroke="#f4a0b5" stroke-width="2.5"/>
+              <ellipse cx="148" cy="45" rx="20" ry="22" fill="white" stroke="#f4a0b5" stroke-width="2.5"/>
+              <g transform="translate(130,20)">
+                <ellipse cx="-10" cy="0" rx="14" ry="9" fill="#f4a0b5" opacity="0.9"/>
+                <ellipse cx="10" cy="0" rx="14" ry="9" fill="#f4a0b5" opacity="0.9"/>
+                <ellipse cx="0" cy="0" rx="6" ry="6" fill="#e8739a"/>
+              </g>
+              <ellipse cx="78" cy="95" rx="6" ry="7" fill="#2d1a22"/>
+              <ellipse cx="122" cy="95" rx="6" ry="7" fill="#2d1a22"/>
+              <circle cx="81" cy="92" r="2" fill="white"/>
+              <circle cx="125" cy="92" r="2" fill="white"/>
+              <ellipse cx="100" cy="108" rx="5" ry="3.5" fill="#f4a0b5"/>
+              <line x1="30" y1="100" x2="88" y2="106" stroke="#d0a0b0" stroke-width="1.5" stroke-linecap="round"/>
+              <line x1="30" y1="110" x2="88" y2="110" stroke="#d0a0b0" stroke-width="1.5" stroke-linecap="round"/>
+              <line x1="112" y1="106" x2="170" y2="100" stroke="#d0a0b0" stroke-width="1.5" stroke-linecap="round"/>
+              <line x1="112" y1="110" x2="170" y2="110" stroke="#d0a0b0" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M100 170 C100 170 85 158 85 148 C85 141 92 137 100 144 C108 137 115 141 115 148 C115 158 100 170 100 170Z" fill="#f4a0b5" opacity="0.8"/>
+            </svg>
+            <span>🎀</span>
+          </div>
+          <h1 class="letter-title">Una carta para ti 💌</h1>
+          <p class="letter-subtitle">con todo el amor del mundo</p>
+        </div>
+
+        <div class="letter-body" style="position:relative;">
+          <span class="letter-corner tl">🌸</span>
+          <span class="letter-corner tr">💗</span>
+          <span class="letter-corner bl">💗</span>
+          <span class="letter-corner br">🌸</span>
+
+          <div class="letter-text">
+            <p>Eso de las cartas no se me da muy bien, pero aquí voy de nuevo.</p>
+
+            <p>Muchos de los gestos que he tenido últimamente han sido por una sola razón. Yo sé que hemos estado distantes, en un momento no muy agradable, quizá en el peor momento de esta relación tan bonita que tenemos. Lo que no sé es si esto sea permanente, no estoy segura de eso.</p>
+
+            <p>De lo que sí estoy completamente segura es que, aunque una parte de mí se esté derrumbando por completo, el amor que te tengo solo crece, y sin mentirte me he enojado por eso. Intenté no pensarte tanto, pero en eso solo fracasaba. Intentaba no imaginarme tantas cosas, solo intentaba, y todos eran intentos fallidos, porque siempre terminaba con la cabeza llena de pensamientos sobre ti, sobre lo mucho que puedo amarte, lo mucho que puedes gustarme, lo mucho que puedo pensarte, lo mucho que puedo esperarte, incluso, lo mucho que puedo necesitarte.</p>
+
+            <p>Una parte muy grande de mí te necesita justo a ti. Yo cometo errores, miles, como todo el resto del mundo, pero nunca con maldad.</p>
+
+            <p>A veces lo único que me gustaría hacer es agarrar un vuelo e irte a ver, aunque sea solo verte unos minutos, aunque sea desde lejos. Porque incluso en medio de todo esto, sigues siendo el lugar al que más quisiera llegar.</p>
+
+            <p>Y hay algo que me cuesta aceptar, no importa cuánto intente distraerme, siempre termino volviendo a ti. A tu voz, a tus ojos, a la forma en que existes en mi vida. Porque hay personas que uno puede querer y luego estás tú, que te volviste parte de mí de una manera mucho más profunda.</p>
+
+            <p>No quiero hacer promesas vacías ni decir cosas "perfectas", porque siento que esto es más real cuando simplemente te hablo desde lo que siento. Y lo que siento es que todavía te miro con el mismo amor, con las mismas ganas, con el mismo nervio pero bonito que siempre me provocas.</p>
+
+            <p>Tal vez no soy la persona más perfecta para amar, pero ojalá nunca dudes que todo esto ha sido real para mí.</p>
+
+            <div class="letter-sign">
+              <p style="font-family:'Lora',serif;font-size:1rem;color:#a05070;margin-bottom:0.7rem;">Te amo de una manera tan inmensa, flaquita de mi vida 💗</p>
+              <p class="letter-sign-name">con todo mi amor</p>
+              <p class="letter-sign-hearts">💗 🎀 💗</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="letter-footer">
+          <p class="letter-footer-hearts">💗 · 🌸 · 💗 · 🌸 · 💗</p>
+        </div>
+
+      </div>
+    </main>
+
+  </div>
+</div>
+
+<script>
+// ── PARTICLES ──
+(function(){
+  const canvas = document.getElementById('particles-canvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, particles = [];
+
+  function resize(){
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const colors = ['rgba(244,160,181,','rgba(232,115,154,','rgba(253,200,220,','rgba(255,182,200,'];
+
+  function createParticle(){
+    return {
+      x: Math.random() * W,
+      y: H + 20,
+      size: Math.random() * 4 + 2,
+      speed: Math.random() * 0.5 + 0.2,
+      opacity: Math.random() * 0.5 + 0.1,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      wobble: Math.random() * 2 - 1,
+      wobbleSpeed: Math.random() * 0.02 + 0.005,
+      angle: 0,
+      type: Math.random() > 0.6 ? 'heart' : 'circle'
+    };
+  }
+
+  for(let i=0;i<40;i++){
+    let p = createParticle();
+    p.y = Math.random() * H;
+    particles.push(p);
+  }
+
+  function drawHeart(ctx, x, y, size, color){
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(size/16, size/16);
+    ctx.beginPath();
+    ctx.moveTo(0, 4);
+    ctx.bezierCurveTo(-8, -4, -16, 0, -16, 8);
+    ctx.bezierCurveTo(-16, 14, -8, 20, 0, 26);
+    ctx.bezierCurveTo(8, 20, 16, 14, 16, 8);
+    ctx.bezierCurveTo(16, 0, 8, -4, 0, 4);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function animate(){
+    ctx.clearRect(0, 0, W, H);
+    particles.forEach((p, i) => {
+      p.angle += p.wobbleSpeed;
+      p.x += Math.sin(p.angle) * 0.5;
+      p.y -= p.speed;
+      if(p.y < -30){
+        particles[i] = createParticle();
+        return;
+      }
+      const alpha = p.opacity;
+      if(p.type === 'heart'){
+        drawHeart(ctx, p.x, p.y, p.size * 2, p.color + alpha + ')');
+      } else {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = p.color + alpha + ')';
+        ctx.fill();
+      }
+    });
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+
+// ── OPEN LETTER ──
+function openLetter(){
+  const welcome = document.getElementById('welcome');
+  const main = document.getElementById('main-page');
+  welcome.classList.add('fade-out');
+  setTimeout(() => {
+    welcome.style.display = 'none';
+    main.classList.add('visible');
+    startTyping();
+    startCounters();
+  }, 900);
+}
+
+// ── TYPING EFFECT ──
+const phrases = ['guardando recuerdos...', 'abriendo carta...', 'para ti 💗'];
+let phraseIdx = 0, charIdx = 0, deleting = false;
+const typingEl = document.getElementById('typing-text');
+
+function startTyping(){
+  typeLoop();
+}
+
+function typeLoop(){
+  const phrase = phrases[phraseIdx];
+  if(!deleting){
+    charIdx++;
+    typingEl.innerHTML = phrase.slice(0, charIdx) + '<span class="cursor-blink"></span>';
+    if(charIdx === phrase.length){
+      deleting = false;
+      setTimeout(() => { deleting = true; typeLoop(); }, 2200);
+      return;
+    }
+    setTimeout(typeLoop, 65);
+  } else {
+    charIdx--;
+    typingEl.innerHTML = phrase.slice(0, charIdx) + '<span class="cursor-blink"></span>';
+    if(charIdx === 0){
+      deleting = false;
+      phraseIdx = (phraseIdx + 1) % phrases.length;
+      setTimeout(typeLoop, 500);
+      return;
+    }
+    setTimeout(typeLoop, 40);
+  }
+}
+
+// ── COUNTERS ──
+function startCounters(){
+  const dates = [
+    new Date('2025-05-14T00:00:00'),
+    new Date('2025-10-05T00:00:00')
+  ];
+  const ids = ['c1', 'c2'];
+
+  function pad(n){ return String(n).padStart(2,'0'); }
+
+  function update(){
+    const now = new Date();
+    ids.forEach((id, i) => {
+      const diff = now - dates[i];
+      const totalSec = Math.floor(diff / 1000);
+      const days  = Math.floor(totalSec / 86400);
+      const hours = Math.floor((totalSec % 86400) / 3600);
+      const mins  = Math.floor((totalSec % 3600) / 60);
+      const secs  = totalSec % 60;
+      document.getElementById(id).innerHTML = `
+        <div class="counter-unit"><span class="counter-num">${days}</span><span class="counter-uname">días</span></div>
+        <div class="counter-unit"><span class="counter-num">${pad(hours)}</span><span class="counter-uname">horas</span></div>
+        <div class="counter-unit"><span class="counter-num">${pad(mins)}</span><span class="counter-uname">min</span></div>
+        <div class="counter-unit"><span class="counter-num">${pad(secs)}</span><span class="counter-uname">seg</span></div>
+      `;
+    });
+  }
+  update();
+  setInterval(update, 1000);
+}
+</script>
+</body>
+</html>
